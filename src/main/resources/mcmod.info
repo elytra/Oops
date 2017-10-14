@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "oops",
+    "name": "Oops",
+    "description": "A solution for accidental placements.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "darkevilmac"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
