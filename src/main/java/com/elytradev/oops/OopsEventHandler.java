@@ -19,6 +19,7 @@ import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 
 import javax.annotation.Nullable;
@@ -28,7 +29,6 @@ import java.util.*;
  * Handles events and player break data, most of the mod is in this class.
  */
 public class OopsEventHandler {
-
     public static final HashMap<UUID, List<PlayerBreakData>> UNDO_DATA = Maps.newHashMap();
     public static Invoker getSilkTouchDrop = Invokers.findMethod(Block.class, "getSilkTouchDrop", "func_180643_i", IBlockState.class);
 
@@ -42,7 +42,7 @@ public class OopsEventHandler {
     @SubscribeEvent
     public void onPlayerTick(PlayerTickEvent e) {
         // tick and remove any existing player break data
-        if (e.player == null || e.player instanceof FakePlayer || e.side.isClient())
+        if (e.player == null || e.player instanceof FakePlayer || e.side.isClient() || e.phase == Phase.START)
             return;
 
         UUID id = e.player.getGameProfile().getId();
@@ -144,6 +144,7 @@ public class OopsEventHandler {
 
     /**
      * Get or create a list of break data for a player with the given id.
+     *
      * @param player the players uuid from their gameprofile
      * @return a list of break data associated with the player id
      */

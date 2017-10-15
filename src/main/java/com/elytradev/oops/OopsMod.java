@@ -9,7 +9,6 @@ import static com.elytradev.oops.OopsMod.*;
 // Fairly generic mod container, registers the event handler and config stuff.
 @Mod(modid = MOD_ID, name = MOD_NAME, version = MOD_VERSION, guiFactory = GUI_FACTORY)
 public class OopsMod {
-
     public static final String MOD_ID = "oops";
     public static final String MOD_NAME = "Oops";
     public static final String MOD_VERSION = "@VERSION@";
