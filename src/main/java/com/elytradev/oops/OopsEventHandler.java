@@ -8,14 +8,18 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent;
+import net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
@@ -107,7 +111,8 @@ public class OopsEventHandler {
         BlockPos pos = e.getPos();
 
         List<PlayerBreakData> breakDataList = getBreakData(player.getGameProfile().getId());
-        Optional<PlayerBreakData> foundBreakData = breakDataList.stream().filter(breakData -> breakData.dataMatches(world, pos)).findFirst();
+        Optional<PlayerBreakData> foundBreakData = breakDataList.stream()
+                .filter(breakData -> breakData.dataMatches(world, pos)).findFirst();
         boolean reDrop = foundBreakData.isPresent();
         if (reDrop && foundBreakData.get().doSilkHarvest()) {
             if (e.getState().getBlock().hasTileEntity(e.getState())) {
@@ -133,13 +138,23 @@ public class OopsEventHandler {
 
     @SubscribeEvent
     public void onBlockPlace(PlaceEvent e) {
+        trackPlacement(e.getWorld(), e.getPos(), e.getState(), e.getPlayer(), e.getHand());
+    }
+
+    private void trackPlacement(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand) {
         // Some checks whether this is a placement to be concerned about.
-        if (e.getPlayer() == null || e.getPlayer() instanceof FakePlayer || e.getWorld().isRemote ||
-                (!OopsConfig.dropTileEntities && e.getPlacedBlock().getBlock().hasTileEntity(e.getState())))
+        if (player == null || player instanceof FakePlayer || world.isRemote || !OopsConfig.trackBlock(state))
             return;
 
-        List<PlayerBreakData> playerBreakData = getBreakData(e.getPlayer().getGameProfile().getId());
-        playerBreakData.add(new PlayerBreakData(e.getWorld(), e.getPos(), e.getPlayer().getHeldItem(e.getHand())));
+        List<PlayerBreakData> playerBreakData = getBreakData(player.getGameProfile().getId());
+        playerBreakData.add(new PlayerBreakData(world, pos, player.getHeldItem(hand)));
+    }
+
+    @SubscribeEvent
+    public void onBlockMultiPlace(MultiPlaceEvent e) {
+        for (BlockSnapshot b : e.getReplacedBlockSnapshots()) {
+            trackPlacement(b.getWorld(), b.getPos(), b.getCurrentBlock(), e.getPlayer(), e.getHand());
+        }
     }
 
     /**
