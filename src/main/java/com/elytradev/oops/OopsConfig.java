@@ -16,8 +16,8 @@ public class OopsConfig extends ConcreteConfig {
 
     @ConfigValue(type = Property.Type.INTEGER, comment = "The amount of ticks you have to break an accidental placement.")
     public static int recoveryTime = 60;
-    @ConfigValue(type = Property.Type.DOUBLE, comment = "The speed of the block breaking, 150 is instant, tweak as needed.")
-    public static double breakSpeed = 150F;
+    @ConfigValue(type = Property.Type.DOUBLE, comment = "The speed of the block breaking, multiplies block hardness by this number.")
+    public static double breakMultiplier = 30;
     @ConfigValue(type = Property.Type.BOOLEAN, comment = "If false blocks with tile entities will be ignored.")
     public static boolean dropTileEntities = true;
     @ConfigValue(type = Property.Type.STRING, comment = "A list of blocks and resource domains to exclude.")

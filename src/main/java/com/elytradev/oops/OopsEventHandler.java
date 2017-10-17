@@ -17,7 +17,6 @@ import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
-import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent;
 import net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
@@ -69,7 +68,7 @@ public class OopsEventHandler {
         boolean adjustSpeed = breakDataList.stream().anyMatch(breakData -> breakData.dataMatches(world, pos));
 
         if (adjustSpeed) {
-            e.setNewSpeed((float) OopsConfig.breakSpeed);
+            e.setNewSpeed((float) (e.getState().getBlockHardness(world, pos) * OopsConfig.breakMultiplier));
         }
     }
 
