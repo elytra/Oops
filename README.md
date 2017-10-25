@@ -1,7 +1,7 @@
+<img src="https://raw.githubusercontent.com/elytra/Oops/1.12/src/main/resources/assets/oops/logo_black.png" align="right" width="180px"/>
+
 [![Jenkins Status](https://img.shields.io/jenkins/s/https/ci.elytradev.com/job/elytra/job/Oops/job/1.12.svg)](https://ci.elytradev.com/job/elytra/job/Oops/job/1.12/)
 [![Lines of Code](https://tokei.rs/b1/github/elytra/Oops?category=code)](https://github.com/elytra/Oops)
-
-<img src="https://raw.githubusercontent.com/elytra/Oops/1.12/src/main/resources/assets/oops/logo_black.png" align="right" width="180px"/>
 
 [>> Downloads <<](https://github.com/elytra/Oops/releases)
 *For when you really didn't mean to place that obsidian.*
