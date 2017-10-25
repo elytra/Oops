@@ -8,19 +8,19 @@ ext {
     version = '4'
 
     concreteVersion = '0.3.2-SNAPSHOT'
-    concreteModules = ['common', 'config', 'reflect']
+    concreteModules = ['common', 'config']
 
     coremod = null
     miniVersion = null
 
     language = 'java'
 
-    forge = '1.10.2-12.18.3.2488'
-    mappings = 'snapshot_20161117'
+    forge = '1.10.2-12.18.3.2511'
+    mappings = 'snapshot_20161111'
 
     enforceLicenseHeaders = false
 
-    verbose = false
+    verbose = true
 }
 
 if (!ext.early) {

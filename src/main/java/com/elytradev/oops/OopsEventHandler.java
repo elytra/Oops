@@ -1,7 +1,6 @@
 package com.elytradev.oops;
 
-import com.elytradev.concrete.reflect.invoker.Invoker;
-import com.elytradev.concrete.reflect.invoker.Invokers;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.minecraft.block.Block;
@@ -25,16 +24,36 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
  * Handles events and player break data, most of the mod is in this class.
  */
 public class OopsEventHandler {
+
     public static final HashMap<UUID, List<PlayerBreakData>> UNDO_DATA = Maps.newHashMap();
-    public static Invoker getSilkTouchDrop = Invokers.findMethod(Block.class, "getSilkTouchDrop", "func_180643_i", IBlockState.class);
+    private static Method createStackedBlock;
+    private static final Logger LOG = LogManager.getLogger("oops");
+
+    public ItemStack getSilkTouchDrop(IBlockState state) {
+        if (createStackedBlock == null) {
+            String[] methodNames = {"createStackedBlock", "func_180643_i"};
+            createStackedBlock = ReflectionHelper.findMethod(Block.class, null, methodNames, IBlockState.class);
+        }
+        ItemStack out = null;
+        try {
+            out = (ItemStack) createStackedBlock.invoke(state.getBlock(), state);
+        } catch (Exception e) {
+            LOG.error("Failed to invoke createStackedBlock. Caused by {}", e);
+        }
+        return out;
+    }
 
     @SubscribeEvent
     public void onPlayerLogout(PlayerLoggedOutEvent e) {
@@ -57,11 +76,11 @@ public class OopsEventHandler {
     @SubscribeEvent
     public void getBreakSpeed(BreakSpeed e) {
         // tweak the block breaking speed if its a position we're tracking
-        if (e.getEntityPlayer() == null || e.getEntityPlayer().world.isRemote)
+        if (e.getEntityPlayer() == null || e.getEntityPlayer().getEntityWorld().isRemote)
             return;
 
         // Adjusts the break speed of the block so it happens fast if it was recently placed.
-        World world = e.getEntityPlayer().world;
+        World world = e.getEntityPlayer().getEntityWorld();
         BlockPos pos = e.getPos();
         UUID playerID = e.getEntityPlayer().getGameProfile().getId();
 
@@ -76,13 +95,13 @@ public class OopsEventHandler {
     @SubscribeEvent
     public void onHarvestCheck(HarvestCheck e) {
         // force the harvest check to return true if the player is looking at a block that were tracking
-        if (e.canHarvest() || e.getEntityPlayer().world.isRemote)
+        if (e.canHarvest() || e.getEntityPlayer().getEntityWorld().isRemote)
             return;
 
         EntityPlayer player = e.getEntityPlayer();
         RayTraceResult hit = rayTrace(player);
         if (hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK) {
-            World world = player.world;
+            World world = player.getEntityWorld();
             BlockPos pos = hit.getBlockPos();
             IBlockState state = e.getTargetBlock();
 
@@ -103,11 +122,11 @@ public class OopsEventHandler {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onHarvestDrops(HarvestDropsEvent e) {
         // tweak any drops if needed, whether that be switching to silktouch or using a backup we stored.
-        if (e.getHarvester() == null || e.getHarvester().world.isRemote)
+        if (e.getHarvester() == null || e.getHarvester().getEntityWorld().isRemote)
             return;
 
         EntityPlayer player = e.getHarvester();
-        World world = player.world;
+        World world = player.getEntityWorld();
         BlockPos pos = e.getPos();
 
         List<PlayerBreakData> breakDataList = getBreakData(player.getGameProfile().getId());
@@ -119,7 +138,7 @@ public class OopsEventHandler {
                 e.getDrops().clear();
                 e.getDrops().add(foundBreakData.get().getInitialStack());
             } else if (!e.isSilkTouching()) {
-                ItemStack silkDrop = (ItemStack) getSilkTouchDrop.invoke(e.getState().getBlock(), e.getState());
+                ItemStack silkDrop = getSilkTouchDrop(e.getState());
                 e.getDrops().clear();
                 e.getDrops().add(silkDrop);
             }
@@ -132,8 +151,8 @@ public class OopsEventHandler {
         double reach = player.isCreative() ? 5 : 4.5;
         Vec3d eyes = player.getPositionEyes(1F);
         Vec3d look = player.getLook(1F);
-        Vec3d end = eyes.addVector(look.x * reach, look.y * reach, look.z * reach);
-        return player.world.rayTraceBlocks(eyes, end, false, false, true);
+        Vec3d end = eyes.addVector(look.xCoord * reach, look.yCoord * reach, look.zCoord * reach);
+        return player.getEntityWorld().rayTraceBlocks(eyes, end, false, false, true);
     }
 
     @SubscribeEvent
