@@ -18,6 +18,7 @@ public class PlayerBreakData {
         this.pos = pos;
         this.world = world;
         this.initialStack = initialStack.copy();
+        this.initialStack.setCount(1);
         this.ticksRemaining = OopsConfig.recoveryTime;
     }
 
