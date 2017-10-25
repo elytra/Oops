@@ -5,7 +5,7 @@ ext {
     projectName = 'oops'
 
     useElytraVersionFormat = true
-    version = '3'
+    version = '4'
 
     concreteVersion = '0.3.2-SNAPSHOT'
     concreteModules = ['common', 'config', 'reflect']
@@ -15,7 +15,7 @@ ext {
 
     language = 'java'
 
-    forge = '1.12.2-14.23.0.2512'
+    forge = '1.12.2-14.23.0.2515'
     mappings = 'snapshot_20171013'
 
     enforceLicenseHeaders = false

@@ -20,6 +20,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent;
 import net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -99,7 +100,7 @@ public class OopsEventHandler {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onHarvestDrops(HarvestDropsEvent e) {
         // tweak any drops if needed, whether that be switching to silktouch or using a backup we stored.
         if (e.getHarvester() == null || e.getHarvester().world.isRemote)
