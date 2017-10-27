@@ -103,19 +103,12 @@ public class OopsEventHandler {
         if (hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK) {
             World world = player.getEntityWorld();
             BlockPos pos = hit.getBlockPos();
-            IBlockState state = e.getTargetBlock();
 
             UUID playerID = player.getGameProfile().getId();
             List<PlayerBreakData> breakDataList = UNDO_DATA.getOrDefault(playerID, Collections.emptyList());
             Optional<PlayerBreakData> foundBreakData =
                     breakDataList.stream().filter(breakData -> breakData.dataMatches(world, pos)).findFirst();
             e.setCanHarvest(foundBreakData.isPresent());
-
-            if (foundBreakData.isPresent()) {
-                PlayerBreakData playerBreakData = foundBreakData.get();
-                boolean canSilkHarvest = state.getBlock().canSilkHarvest(world, pos, state, player);
-                playerBreakData.setCanSilkHarvest(canSilkHarvest);
-            }
         }
     }
 
@@ -133,23 +126,42 @@ public class OopsEventHandler {
         Optional<PlayerBreakData> foundBreakData = breakDataList.stream()
                 .filter(breakData -> breakData.dataMatches(world, pos)).findFirst();
         boolean reDrop = foundBreakData.isPresent();
-        if (reDrop && foundBreakData.get().doSilkHarvest()) {
-            if (e.getState().getBlock().hasTileEntity(e.getState())) {
-                e.getDrops().clear();
-                e.getDrops().add(foundBreakData.get().getInitialStack());
-            } else if (!e.isSilkTouching()) {
-                ItemStack silkDrop = getSilkTouchDrop(e.getState());
-                e.getDrops().clear();
-                e.getDrops().add(silkDrop);
-            }
+        if (!reDrop) return;
+
+        if (!OopsConfig.legacyDrop) {
+            // New drop behaviour, a bit cleaner and makes a lot more sense.
+            PlayerBreakData breakData = foundBreakData.get();
+            ItemStack drop = breakData.getInitialStack();
             getBreakData(player.getGameProfile().getId()).remove(foundBreakData.get());
+
+            if (drop == null) {
+                drop = getSilkTouchDrop(e.getState());
+            }
+            if (drop != null) {
+                e.getDrops().clear();
+                e.getDrops().add(drop);
+            }
+        } else {
+            //Somewhat hectic legacy drop behaviour.
+            boolean doSilkHarvest = e.getState().getBlock().canSilkHarvest(world, pos, e.getState(), player);
+            if (doSilkHarvest) {
+                if (e.getState().getBlock().hasTileEntity(e.getState())) {
+                    e.getDrops().clear();
+                    e.getDrops().add(foundBreakData.get().getInitialStack());
+                } else if (!e.isSilkTouching()) {
+                    ItemStack silkDrop = getSilkTouchDrop(e.getState());
+                    e.getDrops().clear();
+                    e.getDrops().add(silkDrop);
+                }
+                getBreakData(player.getGameProfile().getId()).remove(foundBreakData.get());
+            }
         }
     }
 
     @Nullable
     public RayTraceResult rayTrace(EntityPlayer player) {
         double reach = player.isCreative() ? 5 : 4.5;
-        Vec3d eyes = player.getPositionEyes(1F);
+        Vec3d eyes = new Vec3d(player.posX, player.posY + (double) player.getEyeHeight(), player.posZ);
         Vec3d look = player.getLook(1F);
         Vec3d end = eyes.addVector(look.xCoord * reach, look.yCoord * reach, look.zCoord * reach);
         return player.getEntityWorld().rayTraceBlocks(eyes, end, false, false, true);
@@ -166,7 +178,7 @@ public class OopsEventHandler {
             return;
 
         List<PlayerBreakData> playerBreakData = getBreakData(player.getGameProfile().getId());
-        playerBreakData.add(new PlayerBreakData(world, pos, player.getHeldItem(hand)));
+        playerBreakData.add(new PlayerBreakData(world, pos, player.getHeldItem(hand), state));
     }
 
     @SubscribeEvent
