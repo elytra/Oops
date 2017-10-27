@@ -1,5 +1,7 @@
 package com.elytradev.oops;
 
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -12,22 +14,15 @@ public class PlayerBreakData {
     private World world;
     private BlockPos pos;
     private ItemStack initialStack = ItemStack.EMPTY;
-    private boolean canSilkHarvest = true;
+    private IBlockState expectedState = Blocks.AIR.getDefaultState();
 
-    public PlayerBreakData(World world, BlockPos pos, ItemStack initialStack) {
+    public PlayerBreakData(World world, BlockPos pos, ItemStack initialStack, IBlockState expectedState) {
         this.pos = pos;
         this.world = world;
         this.initialStack = initialStack.copy();
         this.initialStack.setCount(1);
         this.ticksRemaining = OopsConfig.recoveryTime;
-    }
-
-    public boolean doSilkHarvest() {
-        return canSilkHarvest;
-    }
-
-    public void setCanSilkHarvest(boolean canSilkHarvest) {
-        this.canSilkHarvest = canSilkHarvest;
+        this.expectedState = expectedState;
     }
 
     public void tick() {
@@ -47,10 +42,14 @@ public class PlayerBreakData {
     }
 
     public boolean dataMatches(World world, BlockPos pos) {
-        return posMatches(pos) && worldMatches(world);
+        return posMatches(pos) && worldMatches(world) && Objects.equals(world.getBlockState(pos), expectedState);
     }
 
     public ItemStack getInitialStack() {
         return initialStack;
+    }
+
+    public IBlockState getExpectedState() {
+        return expectedState;
     }
 }
