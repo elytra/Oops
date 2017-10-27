@@ -20,6 +20,8 @@ public class OopsConfig extends ConcreteConfig {
     public static double breakMultiplier = 30;
     @ConfigValue(type = Property.Type.BOOLEAN, comment = "If false blocks with tile entities will be ignored.")
     public static boolean dropTileEntities = true;
+    @ConfigValue(type = Property.Type.BOOLEAN, comment = "Enable for legacy block drop behaviour.")
+    public static boolean legacyDrop = false;
     @ConfigValue(type = Property.Type.STRING, comment = "A list of blocks and resource domains to exclude.")
     private static String[] blacklist = new String[]{"modid", "othermodid:modblock"};
 
