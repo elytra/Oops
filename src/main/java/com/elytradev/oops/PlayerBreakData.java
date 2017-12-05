@@ -16,6 +16,9 @@ public class PlayerBreakData {
     private ItemStack initialStack = ItemStack.EMPTY;
     private IBlockState expectedState = Blocks.AIR.getDefaultState();
 
+    // True if passed check in break speed code.
+    private boolean passedCheck = false;
+
     public PlayerBreakData(World world, BlockPos pos, ItemStack initialStack, IBlockState expectedState) {
         this.pos = pos;
         this.world = world;
@@ -42,7 +45,8 @@ public class PlayerBreakData {
     }
 
     public boolean dataMatches(World world, BlockPos pos) {
-        return posMatches(pos) && worldMatches(world) && Objects.equals(world.getBlockState(pos), expectedState);
+        return posMatches(pos) && worldMatches(world) &&
+                (passedCheck || Objects.equals(world.getBlockState(pos), expectedState));
     }
 
     public ItemStack getInitialStack() {
@@ -51,5 +55,14 @@ public class PlayerBreakData {
 
     public IBlockState getExpectedState() {
         return expectedState;
+    }
+
+    public boolean isPassedCheck() {
+        return passedCheck;
+    }
+    }
+
+    public void setPassedCheck(boolean passedCheck) {
+        this.passedCheck = passedCheck;
     }
 }

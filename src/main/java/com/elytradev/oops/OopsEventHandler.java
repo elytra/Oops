@@ -17,6 +17,7 @@ import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent;
 import net.minecraftforge.event.world.BlockEvent.MultiPlaceEvent;
 import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
@@ -28,6 +29,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Handles events and player break data, most of the mod is in this class.
@@ -66,10 +68,16 @@ public class OopsEventHandler {
         UUID playerID = e.getEntityPlayer().getGameProfile().getId();
 
         List<PlayerBreakData> breakDataList = getBreakData(playerID);
-        boolean adjustSpeed = breakDataList.stream().anyMatch(breakData -> breakData.dataMatches(world, pos));
+        List<PlayerBreakData> breakResults = breakDataList.stream()
+                .filter(breakData -> breakData.dataMatches(world, pos))
+                .collect(Collectors.toList());
 
-        if (adjustSpeed) {
-            e.setNewSpeed((float) (e.getState().getBlockHardness(world, pos) * OopsConfig.breakMultiplier));
+        if (!breakResults.isEmpty()) {
+            if (e.getState().getBlockHardness(world, pos) > 0)
+                e.setNewSpeed((float) (e.getState().getBlockHardness(world, pos) * OopsConfig.breakMultiplier));
+            for (PlayerBreakData breakResult : breakResults) {
+                breakResult.setPassedCheck(true);
+            }
         }
     }
 
@@ -136,6 +144,22 @@ public class OopsEventHandler {
                 }
                 getBreakData(player.getGameProfile().getId()).remove(foundBreakData.get());
             }
+        }
+    }
+
+    @SubscribeEvent
+    public void onBreakEvent(BlockEvent.BreakEvent e) {
+        if (e.getPlayer() == null || e.getPlayer().world.isRemote)
+            return;
+        EntityPlayer player = e.getPlayer();
+        World world = player.world;
+        BlockPos pos = e.getPos();
+
+        List<PlayerBreakData> breakDataList = getBreakData(player.getGameProfile().getId());
+        Optional<PlayerBreakData> foundBreakData = breakDataList.stream()
+                .filter(breakData -> breakData.dataMatches(world, pos)).findFirst();
+        if (foundBreakData.isPresent()) {
+            e.setExpToDrop(0);
         }
     }
 
