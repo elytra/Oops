@@ -60,7 +60,6 @@ public class PlayerBreakData {
     public boolean isPassedCheck() {
         return passedCheck;
     }
-    }
 
     public void setPassedCheck(boolean passedCheck) {
         this.passedCheck = passedCheck;
