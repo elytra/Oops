@@ -101,7 +101,7 @@ public class OopsEventHandler {
         }
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
+    @SubscribeEvent(priority = EventPriority.LOW)
     public void onHarvestDrops(HarvestDropsEvent e) {
         // tweak any drops if needed, whether that be switching to silktouch or using a backup we stored.
         if (e.getHarvester() == null || e.getHarvester().world.isRemote)
