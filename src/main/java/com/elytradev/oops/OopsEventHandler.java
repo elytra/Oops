@@ -8,6 +8,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -25,7 +26,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -35,7 +36,8 @@ import java.util.stream.Collectors;
  * Handles events and player break data, most of the mod is in this class.
  */
 public class OopsEventHandler {
-    public static final HashMap<UUID, List<PlayerBreakData>> UNDO_DATA = Maps.newHashMap();
+    private final HashMap<UUID, List<PlayerBreakData>> UNDO_DATA = Maps.newHashMap();
+    private int oneTrueMasterTick = 0;
     public static Invoker getSilkTouchDrop = Invokers.findMethod(Block.class, "getSilkTouchDrop", "func_180643_i", IBlockState.class);
 
     @SubscribeEvent
@@ -46,14 +48,16 @@ public class OopsEventHandler {
     }
 
     @SubscribeEvent
-    public void onPlayerTick(PlayerTickEvent e) {
+    public void onServerTick(ServerTickEvent e) {
         // tick and remove any existing player break data
-        if (e.player == null || e.player instanceof FakePlayer || e.side.isClient() || e.phase == Phase.START)
+        if (e.side.isClient() || e.phase != Phase.END)
             return;
 
-        UUID id = e.player.getGameProfile().getId();
-        getBreakData(id).forEach(PlayerBreakData::tick);
-        getBreakData(id).removeIf(PlayerBreakData::isKill);
+        oneTrueMasterTick++;
+
+        UNDO_DATA.values().forEach(datas ->
+                datas.removeIf(data -> data.isKill(oneTrueMasterTick))
+        );
     }
 
     @SubscribeEvent
@@ -183,7 +187,8 @@ public class OopsEventHandler {
             return;
 
         List<PlayerBreakData> playerBreakData = getBreakData(player.getGameProfile().getId());
-        playerBreakData.add(new PlayerBreakData(world, pos, player.getHeldItem(hand), state));
+
+        playerBreakData.add(new PlayerBreakData(world, pos, player.getHeldItem(hand), state, oneTrueMasterTick));
     }
 
     @SubscribeEvent
