@@ -3,6 +3,7 @@ package com.elytradev.oops;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -15,6 +16,7 @@ public class PlayerBreakData {
     private BlockPos pos;
     private ItemStack initialStack = ItemStack.EMPTY;
     private IBlockState expectedState = Blocks.AIR.getDefaultState();
+    private NBTTagCompound expectedTag = new NBTTagCompound();
 
     // True if passed check in break speed code.
     private boolean passedCheck = false;
@@ -26,14 +28,15 @@ public class PlayerBreakData {
         this.initialStack.setCount(1);
         this.ticksRemaining = OopsConfig.recoveryTime;
         this.expectedState = expectedState;
+        this.expectedTag = getExpectedTag();
     }
 
     public void tick() {
-        ticksRemaining--;
+        this.ticksRemaining--;
     }
 
     public boolean isKill() {
-        return ticksRemaining <= 0;
+        return this.ticksRemaining <= 0;
     }
 
     public boolean posMatches(BlockPos otherPos) {
@@ -46,22 +49,34 @@ public class PlayerBreakData {
 
     public boolean dataMatches(World world, BlockPos pos) {
         return posMatches(pos) && worldMatches(world) &&
-                (passedCheck || Objects.equals(world.getBlockState(pos), expectedState));
+                (this.passedCheck || Objects.equals(world.getBlockState(pos), this.expectedState));
+    }
+
+    public boolean tagChanged() {
+        return !getExpectedTag().equals(this.expectedTag);
     }
 
     public ItemStack getInitialStack() {
-        return initialStack;
+        return this.initialStack;
     }
 
     public IBlockState getExpectedState() {
-        return expectedState;
+        return this.expectedState;
     }
 
     public boolean isPassedCheck() {
-        return passedCheck;
+        return this.passedCheck;
     }
 
     public void setPassedCheck(boolean passedCheck) {
         this.passedCheck = passedCheck;
+    }
+
+    public NBTTagCompound getExpectedTag() {
+        if (world.getTileEntity(pos) != null) {
+            return world.getTileEntity(pos).serializeNBT();
+        } else {
+            return new NBTTagCompound();
+        }
     }
 }

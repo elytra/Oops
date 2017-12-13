@@ -117,12 +117,15 @@ public class OopsEventHandler {
         boolean reDrop = foundBreakData.isPresent();
         if (!reDrop) return;
 
+        PlayerBreakData breakData = foundBreakData.get();
+
         if (!OopsConfig.legacyDrop) {
             // New drop behaviour, a bit cleaner and makes a lot more sense.
-            PlayerBreakData breakData = foundBreakData.get();
             ItemStack drop = breakData.getInitialStack();
             getBreakData(player.getGameProfile().getId()).remove(foundBreakData.get());
 
+            if (breakData.tagChanged())
+                return;
             if (drop.isEmpty()) {
                 drop = (ItemStack) getSilkTouchDrop.invoke(e.getState().getBlock(), e.getState());
             }
